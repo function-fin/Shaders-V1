@@ -1,0 +1,195 @@
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace.Terrain
+local CoreGui = game:GetService("CoreGui")
+
+-- Removendo interface antiga se existir para evitar duplicação em testes
+if CoreGui:FindFirstChild("ShaderExecutor") then
+    CoreGui.ShaderExecutor:Destroy()
+end
+
+-- Criando a Interface Principal
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ShaderExecutor"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Botão de Abrir/Fechar (Toggle)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ToggleButton.Text = "GUI"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 14
+ToggleButton.Draggable = true -- Permite mover o botão de abrir
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 50) -- Deixa redondo
+ToggleCorner.Parent = ToggleButton
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 280) -- Aumentado para caber o novo botão
+MainFrame.Position = UDim2.new(0.5, -110, 0.5, -140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true -- Começa visível
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "Shader Pro"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = MainFrame
+
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Size = UDim2.new(1, -20, 1, -50)
+ButtonContainer.Position = UDim2.new(0, 10, 0, 45)
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.Parent = MainFrame
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 8)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Layout.Parent = ButtonContainer
+
+-- Lógica de Abrir/Fechar
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Função para limpar efeitos e restaurar o Lighting original
+local function ResetLighting()
+    -- Remove objetos de efeito
+    for _, obj in pairs(Lighting:GetChildren()) do
+        if obj:IsA("PostEffect") or obj:IsA("Sky") or obj:IsA("Atmosphere") then
+            obj:Destroy()
+        end
+    end
+    for _, obj in pairs(Terrain:GetChildren()) do
+        if obj:IsA("Clouds") then obj:Destroy() end
+    end
+    
+    -- Restaura valores padrão do Roblox
+    Lighting.ClockTime = 14
+    Lighting.Brightness = 2
+    Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+    Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+    Lighting.ExposureCompensation = 0
+    Lighting.FogEnd = 100000
+    Lighting.GlobalShadows = true
+    
+    Terrain.WaterColor = Color3.fromRGB(12, 84, 92)
+    Terrain.WaterReflectance = 1
+    Terrain.WaterTransparency = 0.3
+end
+
+-- Função para criar botões estilizados
+local function CreateButton(name, color)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.BackgroundColor3 = color or Color3.fromRGB(45, 45, 45)
+    btn.BorderSizePixel = 0
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(240, 240, 240)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 14
+    btn.Parent = ButtonContainer
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = btn
+    
+    return btn
+end
+
+-- 1. CONFIGURAÇÃO NIGHT
+local NightBtn = CreateButton("Night")
+NightBtn.MouseButton1Click:Connect(function()
+    ResetLighting()
+    
+    Lighting.ClockTime = 2
+    Lighting.Brightness = 2
+    Lighting.Ambient = Color3.fromRGB(0, 0, 0)
+    Lighting.OutdoorAmbient = Color3.fromRGB(0, 0, 0)
+    Lighting.ExposureCompensation = 0
+    Lighting.FogEnd = 700
+    Lighting.GlobalShadows = true
+    
+    local sky = Instance.new("Sky", Lighting)
+    sky.StarCount = 5000
+    sky.MoonAngularSize = 11
+    
+    local bloom = Instance.new("BloomEffect", Lighting)
+    bloom.Intensity = 1
+    bloom.Size = 24
+    
+    Terrain.WaterColor = Color3.fromRGB(12, 84, 92)
+    Terrain.WaterReflectance = 1
+    Terrain.WaterTransparency = 0.3
+end)
+
+-- 2. CONFIGURAÇÃO CLOUDY
+local CloudyBtn = CreateButton("Cloudy")
+CloudyBtn.MouseButton1Click:Connect(function()
+    ResetLighting()
+    
+    Lighting.ClockTime = 12
+    Lighting.Brightness = 1.2
+    Lighting.Ambient = Color3.fromRGB(100, 100, 100)
+    Lighting.OutdoorAmbient = Color3.fromRGB(80, 80, 80)
+    
+    local atm = Instance.new("Atmosphere", Lighting)
+    atm.Density = 0.35
+    atm.Haze = 2
+    atm.Color = Color3.fromRGB(150, 150, 150)
+    
+    local clouds = Instance.new("Clouds", Terrain)
+    clouds.Density = 0.8
+    clouds.Cover = 0.8
+    
+    local colorCorr = Instance.new("ColorCorrectionEffect", Lighting)
+    colorCorr.Saturation = -0.15
+    colorCorr.Contrast = 0.1
+end)
+
+-- 3. CONFIGURAÇÃO SHORE
+local ShoreBtn = CreateButton("Shore")
+ShoreBtn.MouseButton1Click:Connect(function()
+    ResetLighting()
+    
+    Lighting.ClockTime = 16.5
+    Lighting.Brightness = 2.5
+    Lighting.OutdoorAmbient = Color3.fromRGB(130, 110, 90)
+    
+    local sunRays = Instance.new("SunRaysEffect", Lighting)
+    sunRays.Intensity = 0.15
+    sunRays.Spread = 0.1
+    
+    local atm = Instance.new("Atmosphere", Lighting)
+    atm.Color = Color3.fromRGB(199, 170, 107)
+    atm.Density = 0.3
+    
+    Terrain.WaterColor = Color3.fromRGB(0, 180, 255)
+    Terrain.WaterWaveSize = 0.3
+    Terrain.WaterWaveSpeed = 12
+end)
+
+-- 4. BOTÃO PARA REMOVER TUDO
+local ResetBtn = CreateButton("Remover Efeitos", Color3.fromRGB(120, 40, 40))
+ResetBtn.MouseButton1Click:Connect(function()
+    ResetLighting()
+end)
