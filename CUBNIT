@@ -1,11 +1,16 @@
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace.Terrain
 local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
 
--- 1. LIMPEZA DE INTERFACE ANTERIOR
+-- 1. LIMPEZA TOTAL DE INSTÂNCIAS ANTERIORES
 if CoreGui:FindFirstChild("SHADERS_V1_SPAWNCUB") then
     CoreGui:FindFirstChild("SHADERS_V1_SPAWNCUB"):Destroy()
 end
+
+-- Variável de controle para loops (Chuva/Estrelas)
+_G.ShadersActive = false
 
 -- 2. CRIAÇÃO DA SCREEN GUI
 local ScreenGui = Instance.new("ScreenGui")
@@ -13,11 +18,11 @@ ScreenGui.Name = "SHADERS_V1_SPAWNCUB"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- 3. BOTÃO DE ATIVAÇÃO (ID: 125283549000216)
+-- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL (ID LIMPO)
 local ToggleButton = Instance.new("ImageButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Parent = ScreenGui
-ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Size = UDim2.new(0, 60, 0, 60)
 ToggleButton.Position = UDim2.new(0, 20, 0.5, -27)
 ToggleButton.BackgroundTransparency = 1
 ToggleButton.Image = "rbxassetid://125283549000216"
@@ -28,28 +33,29 @@ local lastClick = 0
 ToggleButton.MouseButton1Click:Connect(function()
     local currentTick = tick()
     if currentTick - lastClick < 0.4 then
-        ScreenGui:Destroy() -- Fecha o script totalmente
+        _G.ShadersActive = false
+        ScreenGui:Destroy() 
     else
         ScreenGui.MainFrame.Visible = not ScreenGui.MainFrame.Visible
     end
     lastClick = currentTick
 end)
 
--- 4. JANELA PRINCIPAL (DESIGN DARK & CLEAN)
+-- 4. JANELA PRINCIPAL (DESIGN DARK + BORDA BRANCA)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 180, 0, 230) -- Interface pequena e simples
-MainFrame.Position = UDim2.new(0.5, -90, 0.5, -115)
+MainFrame.Size = UDim2.new(0, 190, 0, 260)
+MainFrame.Position = UDim2.new(0.5, -95, 0.5, -130)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- Preto
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.Visible = true
 
--- Borda Branca da Interface
 local MainStroke = Instance.new("UIStroke")
 MainStroke.Thickness = 2
-MainStroke.Color = Color3.new(1, 1, 1)
+MainStroke.Color = Color3.new(1, 1, 1) -- Borda Branca
 MainStroke.Parent = MainFrame
 
 local MainCorner = Instance.new("UICorner")
@@ -57,63 +63,81 @@ MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
-Title.Text = "SHADERS V1"
+Title.Text = "SHADERS V1 PRO"
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 13
 Title.Parent = MainFrame
 
 local ButtonContainer = Instance.new("Frame")
-ButtonContainer.Size = UDim2.new(1, -20, 1, -45)
+ButtonContainer.Size = UDim2.new(1, -20, 1, -50)
 ButtonContainer.Position = UDim2.new(0, 10, 0, 40)
 ButtonContainer.BackgroundTransparency = 1
 ButtonContainer.Parent = MainFrame
 
 local Layout = Instance.new("UIListLayout")
-Layout.Padding = UDim.new(0, 6)
+Layout.Padding = UDim.new(0, 7)
 Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 Layout.SortOrder = Enum.SortOrder.LayoutOrder
 Layout.Parent = ButtonContainer
 
---- 5. FUNÇÕES DE SUPORTE ---
+--- 5. FUNÇÕES DE LIMPEZA E SUPORTE (REMOÇÃO 100%) ---
 
-local function ResetLighting()
-    -- Limpa todos os efeitos criados
+local function TotalReset()
+    _G.ShadersActive = false -- Para loops de chuva
+    
+    -- Limpa Lighting
     for _, obj in pairs(Lighting:GetChildren()) do
-        if obj:IsA("PostEffect") or obj:IsA("Sky") or obj:IsA("Atmosphere") then
+        if obj:IsA("PostEffect") or obj:IsA("Sky") or obj:IsA("Atmosphere") or obj.Name == "ULTRA_K_ORIGINAL" then
             obj:Destroy()
         end
     end
+    
+    -- Limpa Workspace (Chuva e Estrelas)
+    if workspace:FindFirstChild("FakeRain") then workspace.FakeRain:Destroy() end
+    if workspace:FindFirstChild("ShootingStars") then workspace.ShootingStars:Destroy() end
+    
+    -- Limpa Terrain
     for _, obj in pairs(Terrain:GetChildren()) do
         if obj:IsA("Clouds") then obj:Destroy() end
     end
     
-    -- Restaura o padrão estável
+    -- Reseta Materiais e Reflexos que o Ultra K altera
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") then
+            if part.Material == Enum.Material.Basalt or part.Material == Enum.Material.Cobblestone then
+                -- Tentativa de retornar ao padrão (apenas se tiver alterado)
+            end
+            part.Reflectance = 0 -- Reset de reflexo ultra
+        end
+    end
+    
+    -- Valores de Iluminação Padrão
     Lighting.ClockTime = 14
     Lighting.Brightness = 2
-    Lighting.Ambient = Color3.fromRGB(127, 127, 127)
     Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
-    Lighting.GlobalShadows = true
+    Lighting.FogEnd = 100000
+    Lighting.ExposureCompensation = 0
     Terrain.WaterColor = Color3.fromRGB(12, 84, 92)
+    Terrain.WaterReflectance = 1
+    Terrain.WaterTransparency = 0.3
 end
 
 local function CreateButton(name, order, color)
     local btn = Instance.new("TextButton")
     btn.Name = name
     btn.LayoutOrder = order
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = color or Color3.fromRGB(35, 35, 35) -- Preto Carbono
+    btn.Size = UDim2.new(1, 0, 0, 36)
+    btn.BackgroundColor3 = color or Color3.fromRGB(38, 38, 38) -- Preto Carbono
     btn.Text = name
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamSemibold
     btn.TextSize = 12
     btn.Parent = ButtonContainer
     
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-    
-    -- Borda sutil nos botões
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     local bStroke = Instance.new("UIStroke")
     bStroke.Thickness = 1
     bStroke.Color = Color3.fromRGB(60, 60, 60)
@@ -123,54 +147,110 @@ local function CreateButton(name, order, color)
     return btn
 end
 
---- 6. CRIAÇÃO DOS BOTÕES ---
+--- 6. LÓGICA DE CHUVA (MELHORIA CLOUDY) ---
+local function StartRain()
+    local rainFolder = Instance.new("Folder", workspace)
+    rainFolder.Name = "FakeRain"
+    task.spawn(function()
+        while _G.ShadersActive do
+            for i = 1, 15 do -- Quantidade otimizada para não dar lag
+                if not _G.ShadersActive then break end
+                local drop = Instance.new("Part", rainFolder)
+                drop.Size = Vector3.new(0.1, 2, 0.1)
+                drop.Anchored, drop.CanCollide = true, false
+                drop.Material, drop.Transparency = Enum.Material.Glass, 0.5
+                drop.Position = Vector3.new(math.random(-150,150), 100, math.random(-150,150))
+                TweenService:Create(drop, TweenInfo.new(1), {Position = drop.Position - Vector3.new(0, 60, 0)}):Play()
+                Debris:AddItem(drop, 1.1)
+            end
+            task.wait(1.5)
+        end
+    end)
+end
 
--- NOITE
-local NightBtn = CreateButton("Noite Escura", 1)
+--- 7. IMPLEMENTAÇÃO DOS BOTÕES COM MELHORIAS ULTRA K ---
+
+-- 1. NIGHT (Noite)
+local NightBtn = CreateButton("Noite Ultra", 1)
 NightBtn.MouseButton1Click:Connect(function()
-    ResetLighting()
+    TotalReset()
     Lighting.ClockTime = 2
-    Lighting.Brightness = 2
-    Lighting.Ambient = Color3.new(0,0,0)
-    
+    Lighting.Brightness = 1.5
     local sky = Instance.new("Sky", Lighting)
     sky.StarCount = 5000
+    local bloom = Instance.new("BloomEffect", Lighting)
+    bloom.Intensity = 0.8
+    bloom.Size = 40
+end)
+
+-- 2. CLOUDY (Melhorado com Ultra K)
+local CloudyBtn = CreateButton("Cloudy (Chuva)", 2)
+CloudyBtn.MouseButton1Click:Connect(function()
+    TotalReset()
+    _G.ShadersActive = true
+    
+    Lighting.ClockTime = 12
+    Lighting.Brightness = 2
+    Lighting.OutdoorAmbient = Color3.fromRGB(50, 50, 50)
+    Lighting.FogColor = Color3.fromRGB(120, 130, 140)
+    Lighting.FogEnd = 500
+    
+    -- ColorCorrection do Ultra K
+    local color = Instance.new("ColorCorrectionEffect", Lighting)
+    color.Contrast = 0.15
+    color.Saturation = -0.1
+    color.TintColor = Color3.fromRGB(220, 230, 255)
     
     local bloom = Instance.new("BloomEffect", Lighting)
-    bloom.Intensity = 1
+    bloom.Intensity = 0.8
+    bloom.Size = 56
+    
+    -- Aplica reflexo "molhado" nas partes
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.Material == Enum.Material.SmoothPlastic then
+            part.Reflectance = 0.2
+        end
+    end
+    
+    Instance.new("Clouds", Terrain).Density = 0.9
+    StartRain()
 end)
 
--- NUBLADO
-local CloudyBtn = CreateButton("Nublado", 2)
-CloudyBtn.MouseButton1Click:Connect(function()
-    ResetLighting()
-    Lighting.ClockTime = 12
-    Lighting.Brightness = 1.2
-    
-    local atm = Instance.new("Atmosphere", Lighting)
-    atm.Density = 0.35
-    
-    -- Correção: De "Nuvens" para "Clouds" (API Roblox)
-    local clouds = Instance.new("Clouds", Terrain)
-    clouds.Density = 0.8
-end)
-
--- DIA
-local ShoreBtn = CreateButton("Dia", 3)
+-- 3. SHORE (Melhorado com Skybox Ultra K)
+local ShoreBtn = CreateButton("Shore (Ultra)", 3)
 ShoreBtn.MouseButton1Click:Connect(function()
-    ResetLighting()
-    Lighting.ClockTime = 14
+    TotalReset()
+    Lighting.ClockTime = 16.5
     Lighting.Brightness = 2.5
     
-    local sun = Instance.new("SunRaysEffect", Lighting)
-    sun.Intensity = 0.15
+    -- Skybox do Ultra K
+    local sky = Instance.new("Sky", Lighting)
+    sky.SkyboxBk = "rbxassetid://159454299"
+    sky.SkyboxDn = "rbxassetid://159454296"
+    sky.SkyboxFt = "rbxassetid://159454293"
+    sky.SkyboxLf = "rbxassetid://159454286"
+    sky.SkyboxRt = "rbxassetid://159454300"
+    sky.SkyboxUp = "rbxassetid://159454304"
+    sky.SunAngularSize = 0
     
-    local atm = Instance.new("Atmosphere", Lighting)
-    atm.Color = Color3.fromRGB(199, 170, 107)
+    local sunRays = Instance.new("SunRaysEffect", Lighting)
+    sunRays.Intensity = 0.1
+    
+    local bloom = Instance.new("BloomEffect", Lighting)
+    bloom.Intensity = 0.5
+    bloom.Size = 30
+    
+    local color = Instance.new("ColorCorrectionEffect", Lighting)
+    color.Contrast = 0.2
+    color.Saturation = 0.1
+    
+    Terrain.WaterColor = Color3.fromRGB(0, 180, 255)
+    Terrain.WaterWaveSize = 0.25
+    Terrain.WaterWaveSpeed = 15
 end)
 
--- REMOVER (ÚLTIMO DA LISTA)
-local ResetBtn = CreateButton("Remover Shaders", 4, Color3.fromRGB(80, 25, 25))
+-- 4. REMOVER SHADERS (Reset Completo)
+local ResetBtn = CreateButton("Remover Shaders", 4, Color3.fromRGB(90, 25, 25))
 ResetBtn.MouseButton1Click:Connect(function()
-    ResetLighting()
+    TotalReset()
 end)
