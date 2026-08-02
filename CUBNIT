@@ -4,31 +4,33 @@ local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
--- 1. LIMPEZA TOTAL DE INSTÂNCIAS ANTERIORES
-if CoreGui:FindFirstChild("SHADERS_V1_SPAWNCUB") then
-    CoreGui:FindFirstChild("SHADERS_V1_SPAWNCUB"):Destroy()
+-- Configurações da Textura Customizada do Sol e Lua
+local TEXTURA_SOL_LUA = "rbxassetid://85337967115080"
+local TAMANHO_SOL_LUA = 15
+
+-- 1. LIMPEZA DE INSTÂNCIAS ANTERIORES
+if CoreGui:FindFirstChild("SPWN_SHADERS_GUI") then
+    CoreGui:FindFirstChild("SPWN_SHADERS_GUI"):Destroy()
 end
 
--- Variável de controle para loops (Chuva/Estrelas)
 _G.ShadersActive = false
 
--- 2. CRIAÇÃO DA SCREEN GUI
+-- 2. SCREEN GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SHADERS_V1_SPAWNCUB"
+ScreenGui.Name = "SPWN_SHADERS_GUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL (ID LIMPO)
+-- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL
 local ToggleButton = Instance.new("ImageButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Parent = ScreenGui
 ToggleButton.Size = UDim2.new(0, 60, 0, 60)
-ToggleButton.Position = UDim2.new(0, 20, 0.5, -27)
+ToggleButton.Position = UDim2.new(0, 20, 0.5, -30)
 ToggleButton.BackgroundTransparency = 1
 ToggleButton.Image = "rbxassetid://125283549000216"
 ToggleButton.Draggable = true
 
--- Lógica: Clique único abre/fecha | Clique duplo deleta o script
 local lastClick = 0
 ToggleButton.MouseButton1Click:Connect(function()
     local currentTick = tick()
@@ -41,80 +43,218 @@ ToggleButton.MouseButton1Click:Connect(function()
     lastClick = currentTick
 end)
 
--- 4. JANELA PRINCIPAL (DESIGN DARK + BORDA BRANCA)
+-- 4. JANELA PRINCIPAL
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 190, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -95, 0.5, -130)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15) -- Preto
+MainFrame.Size = UDim2.new(0, 520, 0, 310)
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -155)
+MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = true
 
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Thickness = 2
-MainStroke.Color = Color3.new(1, 1, 1) -- Borda Branca
-MainStroke.Parent = MainFrame
-
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.CornerRadius = UDim.new(0, 6)
 MainCorner.Parent = MainFrame
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Text = "SHADERS V1 PRO"
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 13
-Title.Parent = MainFrame
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Thickness = 1.5
+MainStroke.Color = Color3.fromRGB(220, 220, 220)
+MainStroke.Parent = MainFrame
 
-local ButtonContainer = Instance.new("Frame")
-ButtonContainer.Size = UDim2.new(1, -20, 1, -50)
-ButtonContainer.Position = UDim2.new(0, 10, 0, 40)
-ButtonContainer.BackgroundTransparency = 1
-ButtonContainer.Parent = MainFrame
+-- --- PAINEL ESQUERDO (LISTA DE SHADERS) ---
+local LeftPanel = Instance.new("Frame")
+LeftPanel.Name = "LeftPanel"
+LeftPanel.Size = UDim2.new(0, 310, 1, 0)
+LeftPanel.BackgroundTransparency = 1
+LeftPanel.Parent = MainFrame
 
-local Layout = Instance.new("UIListLayout")
-Layout.Padding = UDim.new(0, 7)
-Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-Layout.SortOrder = Enum.SortOrder.LayoutOrder
-Layout.Parent = ButtonContainer
+-- Cabeçalho
+local Header = Instance.new("TextLabel")
+Header.Size = UDim2.new(1, -20, 0, 40)
+Header.Position = UDim2.new(0, 15, 0, 5)
+Header.BackgroundTransparency = 1
+Header.Text = "SPWN CLIENT <font color=\"rgb(180,180,180)\">| Shaders</font>"
+Header.RichText = true
+Header.TextColor3 = Color3.fromRGB(255, 255, 255)
+Header.Font = Enum.Font.Arcade
+Header.TextSize = 22
+Header.TextXAlignment = Enum.TextXAlignment.Left
+Header.Parent = LeftPanel
 
---- 5. FUNÇÕES DE LIMPEZA E SUPORTE (REMOÇÃO 100%) ---
+local HeaderLine = Instance.new("Frame")
+HeaderLine.Size = UDim2.new(1, -30, 0, 1)
+HeaderLine.Position = UDim2.new(0, 15, 0, 45)
+HeaderLine.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+HeaderLine.BorderSizePixel = 0
+HeaderLine.Parent = LeftPanel
+
+-- Card do Shader Cloudy
+local ShaderCard = Instance.new("ImageButton")
+ShaderCard.Name = "CloudyCard"
+ShaderCard.Size = UDim2.new(0, 110, 0, 110)
+ShaderCard.Position = UDim2.new(0, 15, 0, 60)
+ShaderCard.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ShaderCard.Image = "rbxassetid://132375770810392"
+ShaderCard.ScaleType = Enum.ScaleType.Crop
+ShaderCard.Parent = LeftPanel
+
+local CardCorner = Instance.new("UICorner")
+CardCorner.CornerRadius = UDim.new(0, 6)
+CardCorner.Parent = ShaderCard
+
+local CardStroke = Instance.new("UIStroke")
+CardStroke.Thickness = 1.5
+CardStroke.Color = Color3.fromRGB(255, 255, 255)
+CardStroke.Parent = ShaderCard
+
+local CardTitle = Instance.new("TextLabel")
+CardTitle.Size = UDim2.new(1, 0, 0, 25)
+CardTitle.Position = UDim2.new(0, 0, 1, -25)
+CardTitle.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+CardTitle.BackgroundTransparency = 0.4
+CardTitle.Text = "Cloudy (Chuva)"
+CardTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+CardTitle.Font = Enum.Font.Arcade
+CardTitle.TextSize = 12
+CardTitle.Parent = ShaderCard
+
+-- --- PAINEL DIREITO (PRÉ-VISUALIZAÇÃO E AÇÕES) ---
+local RightPanel = Instance.new("Frame")
+RightPanel.Name = "RightPanel"
+RightPanel.Size = UDim2.new(0, 195, 1, -16)
+RightPanel.Position = UDim2.new(0, 315, 0, 8)
+RightPanel.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+RightPanel.Parent = MainFrame
+
+local RightCorner = Instance.new("UICorner")
+RightCorner.CornerRadius = UDim.new(0, 6)
+RightCorner.Parent = RightPanel
+
+local RightStroke = Instance.new("UIStroke")
+RightStroke.Thickness = 1
+RightStroke.Color = Color3.fromRGB(180, 180, 180)
+RightStroke.Parent = RightPanel
+
+-- Pré-visualização Label
+local PreviewLabel = Instance.new("TextLabel")
+PreviewLabel.Size = UDim2.new(1, -10, 0, 20)
+PreviewLabel.Position = UDim2.new(0, 8, 0, 5)
+PreviewLabel.BackgroundTransparency = 1
+PreviewLabel.Text = "PRÉ-VISUALIZAÇÃO"
+PreviewLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+PreviewLabel.Font = Enum.Font.Arcade
+PreviewLabel.TextSize = 12
+PreviewLabel.TextXAlignment = Enum.TextXAlignment.Left
+PreviewLabel.Parent = RightPanel
+
+-- Imagem de Pré-visualização
+local PreviewImage = Instance.new("ImageLabel")
+PreviewImage.Size = UDim2.new(1, -16, 0, 100)
+PreviewImage.Position = UDim2.new(0, 8, 0, 25)
+PreviewImage.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+PreviewImage.Image = "rbxassetid://132375770810392"
+PreviewImage.ScaleType = Enum.ScaleType.Crop
+PreviewImage.Parent = RightPanel
+
+local PreviewCorner = Instance.new("UICorner")
+PreviewCorner.CornerRadius = UDim.new(0, 4)
+PreviewCorner.Parent = PreviewImage
+
+local PreviewStroke = Instance.new("UIStroke")
+PreviewStroke.Thickness = 1
+PreviewStroke.Color = Color3.fromRGB(100, 100, 100)
+PreviewStroke.Parent = PreviewImage
+
+-- Linha Divisória
+local DivLine = Instance.new("Frame")
+DivLine.Size = UDim2.new(1, -16, 0, 1)
+DivLine.Position = UDim2.new(0, 8, 0, 132)
+DivLine.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+DivLine.BorderSizePixel = 0
+DivLine.Parent = RightPanel
+
+-- Detalhes Label
+local DetailsLabel = Instance.new("TextLabel")
+DetailsLabel.Size = UDim2.new(1, -10, 0, 15)
+DetailsLabel.Position = UDim2.new(0, 8, 0, 137)
+DetailsLabel.BackgroundTransparency = 1
+DetailsLabel.Text = "DETALHES DO SHADER"
+DetailsLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+DetailsLabel.Font = Enum.Font.Arcade
+DetailsLabel.TextSize = 11
+DetailsLabel.TextXAlignment = Enum.TextXAlignment.Left
+DetailsLabel.Parent = RightPanel
+
+-- Texto Descritivo Corrigido (Ajuste de espaço para a fonte Arcade)
+local Description = Instance.new("TextLabel")
+Description.Size = UDim2.new(1, -16, 0, 95)
+Description.Position = UDim2.new(0, 8, 0, 154)
+Description.BackgroundTransparency = 1
+Description.Text = "Este shader oferece um ambiente dark e realista, com uma atmosfera Baseada no Forsekan. É o primeiro shader oficial do Project SPWN."
+Description.TextColor3 = Color3.fromRGB(220, 220, 220)
+Description.Font = Enum.Font.Arcade
+Description.TextSize = 10 -- Reduzido levemente para caber o texto completo
+Description.TextWrapped = true
+Description.TextYAlignment = Enum.TextYAlignment.Top
+Description.TextXAlignment = Enum.TextXAlignment.Left
+Description.Parent = RightPanel
+
+-- Botão de Aplicar / Remover
+local ActionButton = Instance.new("TextButton")
+ActionButton.Name = "ActionButton"
+ActionButton.Size = UDim2.new(1, -16, 0, 30)
+ActionButton.Position = UDim2.new(0, 8, 1, -36)
+ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ActionButton.Text = "APLICAR SHADERS"
+ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActionButton.Font = Enum.Font.Arcade
+ActionButton.TextSize = 13
+ActionButton.Parent = RightPanel
+
+local ActionCorner = Instance.new("UICorner")
+ActionCorner.CornerRadius = UDim.new(0, 4)
+ActionCorner.Parent = ActionButton
+
+local ActionStroke = Instance.new("UIStroke")
+ActionStroke.Thickness = 1
+ActionStroke.Color = Color3.fromRGB(200, 200, 200)
+ActionStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+ActionStroke.Parent = ActionButton
+
+
+-- 5. FUNÇÕES DE SUPORTE, SISTEMA DE SOL/LUA E RESET TOTAL
+
+local skyConnections = {}
 
 local function TotalReset()
-    _G.ShadersActive = false -- Para loops de chuva
-    
-    -- Limpa Lighting
+    _G.ShadersActive = false
+
+    for _, conn in pairs(skyConnections) do
+        if conn then conn:Disconnect() end
+    end
+    skyConnections = {}
+
     for _, obj in pairs(Lighting:GetChildren()) do
         if obj:IsA("PostEffect") or obj:IsA("Sky") or obj:IsA("Atmosphere") or obj.Name == "ULTRA_K_ORIGINAL" then
             obj:Destroy()
         end
     end
-    
-    -- Limpa Workspace (Chuva e Estrelas)
+
     if workspace:FindFirstChild("FakeRain") then workspace.FakeRain:Destroy() end
-    if workspace:FindFirstChild("ShootingStars") then workspace.ShootingStars:Destroy() end
-    
-    -- Limpa Terrain
+
     for _, obj in pairs(Terrain:GetChildren()) do
         if obj:IsA("Clouds") then obj:Destroy() end
     end
-    
-    -- Reseta Materiais e Reflexos que o Ultra K altera
+
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") then
-            if part.Material == Enum.Material.Basalt or part.Material == Enum.Material.Cobblestone then
-                -- Tentativa de retornar ao padrão (apenas se tiver alterado)
-            end
-            part.Reflectance = 0 -- Reset de reflexo ultra
+            part.Reflectance = 0
         end
     end
-    
-    -- Valores de Iluminação Padrão
+
     Lighting.ClockTime = 14
     Lighting.Brightness = 2
     Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
@@ -125,35 +265,44 @@ local function TotalReset()
     Terrain.WaterTransparency = 0.3
 end
 
-local function CreateButton(name, order, color)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.LayoutOrder = order
-    btn.Size = UDim2.new(1, 0, 0, 36)
-    btn.BackgroundColor3 = color or Color3.fromRGB(38, 38, 38) -- Preto Carbono
-    btn.Text = name
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 12
-    btn.Parent = ButtonContainer
+local function AplicarTexturasSolLua(sky)
+    if not sky or not _G.ShadersActive then return end
     
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    local bStroke = Instance.new("UIStroke")
-    bStroke.Thickness = 1
-    bStroke.Color = Color3.fromRGB(60, 60, 60)
-    bStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    bStroke.Parent = btn
+    if sky.SunTextureId ~= TEXTURA_SOL_LUA then
+        sky.SunTextureId = TEXTURA_SOL_LUA
+    end
+    if sky.MoonTextureId ~= TEXTURA_SOL_LUA then
+        sky.MoonTextureId = TEXTURA_SOL_LUA
+    end
     
-    return btn
+    if sky.SunAngularSize ~= TAMANHO_SOL_LUA then
+        sky.SunAngularSize = TAMANHO_SOL_LUA
+    end
+    if sky.MoonAngularSize ~= TAMANHO_SOL_LUA then
+        sky.MoonAngularSize = TAMANHO_SOL_LUA
+    end
 end
 
---- 6. LÓGICA DE CHUVA (MELHORIA CLOUDY) ---
+local function MonitorarSolLua(sky)
+    AplicarTexturasSolLua(sky)
+    
+    local connSun = sky:GetPropertyChangedSignal("SunTextureId"):Connect(function()
+        AplicarTexturasSolLua(sky)
+    end)
+    local connMoon = sky:GetPropertyChangedSignal("MoonTextureId"):Connect(function()
+        AplicarTexturasSolLua(sky)
+    end)
+    
+    table.insert(skyConnections, connSun)
+    table.insert(skyConnections, connMoon)
+end
+
 local function StartRain()
     local rainFolder = Instance.new("Folder", workspace)
     rainFolder.Name = "FakeRain"
     task.spawn(function()
         while _G.ShadersActive do
-            for i = 1, 15 do -- Quantidade otimizada para não dar lag
+            for i = 1, 15 do
                 if not _G.ShadersActive then break end
                 local drop = Instance.new("Part", rainFolder)
                 drop.Size = Vector3.new(0.1, 2, 0.1)
@@ -168,89 +317,68 @@ local function StartRain()
     end)
 end
 
---- 7. IMPLEMENTAÇÃO DOS BOTÕES COM MELHORIAS ULTRA K ---
-
--- 1. NIGHT (Noite)
-local NightBtn = CreateButton("Noite Ultra", 1)
-NightBtn.MouseButton1Click:Connect(function()
-    TotalReset()
-    Lighting.ClockTime = 2
-    Lighting.Brightness = 1.5
-    local sky = Instance.new("Sky", Lighting)
-    sky.StarCount = 5000
-    local bloom = Instance.new("BloomEffect", Lighting)
-    bloom.Intensity = 0.8
-    bloom.Size = 40
-end)
-
--- 2. CLOUDY (Melhorado com Ultra K)
-local CloudyBtn = CreateButton("Cloudy (Chuva)", 2)
-CloudyBtn.MouseButton1Click:Connect(function()
+local function ApplyCloudyShader()
     TotalReset()
     _G.ShadersActive = true
-    
+
     Lighting.ClockTime = 12
     Lighting.Brightness = 2
     Lighting.OutdoorAmbient = Color3.fromRGB(50, 50, 50)
     Lighting.FogColor = Color3.fromRGB(120, 130, 140)
     Lighting.FogEnd = 500
-    
-    -- ColorCorrection do Ultra K
+
     local color = Instance.new("ColorCorrectionEffect", Lighting)
     color.Contrast = 0.15
     color.Saturation = -0.1
     color.TintColor = Color3.fromRGB(220, 230, 255)
-    
+
     local bloom = Instance.new("BloomEffect", Lighting)
     bloom.Intensity = 0.8
     bloom.Size = 56
-    
-    -- Aplica reflexo "molhado" nas partes
+
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Material == Enum.Material.SmoothPlastic then
             part.Reflectance = 0.2
         end
     end
-    
+
     Instance.new("Clouds", Terrain).Density = 0.9
+
+    local currentSky = Lighting:FindFirstChildOfClass("Sky")
+    if not currentSky then
+        currentSky = Instance.new("Sky")
+        currentSky.Parent = Lighting
+    end
+    MonitorarSolLua(currentSky)
+
+    local skyAddedConn = Lighting.ChildAdded:Connect(function(child)
+        if child:IsA("Sky") and _G.ShadersActive then
+            task.wait()
+            MonitorarSolLua(child)
+        end
+    end)
+    table.insert(skyConnections, skyAddedConn)
+
     StartRain()
+end
+
+-- 6. LÓGICA DE INTERAÇÃO DA INTERFACE
+
+ShaderCard.MouseButton1Click:Connect(function()
+    CardStroke.Color = Color3.fromRGB(255, 255, 255)
+    CardStroke.Thickness = 2
 end)
 
--- 3. SHORE (Melhorado com Skybox Ultra K)
-local ShoreBtn = CreateButton("Shore (Ultra)", 3)
-ShoreBtn.MouseButton1Click:Connect(function()
-    TotalReset()
-    Lighting.ClockTime = 16.5
-    Lighting.Brightness = 2.5
-    
-    -- Skybox do Ultra K
-    local sky = Instance.new("Sky", Lighting)
-    sky.SkyboxBk = "rbxassetid://159454299"
-    sky.SkyboxDn = "rbxassetid://159454296"
-    sky.SkyboxFt = "rbxassetid://159454293"
-    sky.SkyboxLf = "rbxassetid://159454286"
-    sky.SkyboxRt = "rbxassetid://159454300"
-    sky.SkyboxUp = "rbxassetid://159454304"
-    sky.SunAngularSize = 0
-    
-    local sunRays = Instance.new("SunRaysEffect", Lighting)
-    sunRays.Intensity = 0.1
-    
-    local bloom = Instance.new("BloomEffect", Lighting)
-    bloom.Intensity = 0.5
-    bloom.Size = 30
-    
-    local color = Instance.new("ColorCorrectionEffect", Lighting)
-    color.Contrast = 0.2
-    color.Saturation = 0.1
-    
-    Terrain.WaterColor = Color3.fromRGB(0, 180, 255)
-    Terrain.WaterWaveSize = 0.25
-    Terrain.WaterWaveSpeed = 15
-end)
-
--- 4. REMOVER SHADERS (Reset Completo)
-local ResetBtn = CreateButton("Remover Shaders", 4, Color3.fromRGB(90, 25, 25))
-ResetBtn.MouseButton1Click:Connect(function()
-    TotalReset()
+ActionButton.MouseButton1Click:Connect(function()
+    if _G.ShadersActive then
+        TotalReset()
+        ActionButton.Text = "APLICAR SHADERS"
+        ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        ActionStroke.Color = Color3.fromRGB(200, 200, 200)
+    else
+        ApplyCloudyShader()
+        ActionButton.Text = "REMOVER SHADERS"
+        ActionButton.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        ActionStroke.Color = Color3.fromRGB(255, 80, 80)
+    end
 end)
