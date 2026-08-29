@@ -8,12 +8,15 @@ local Debris = game:GetService("Debris")
 local TEXTURA_SOL_LUA = "rbxassetid://85337967115080"
 local TAMANHO_SOL_LUA = 15
 
--- 1. LIMPEZA DE INSTÂNCIAS ANTERIORES
+-- 1. PERSISTÊNCIA DE MEMÓRIA DO SHADER
+if _G.ShadersActive == nil then
+    _G.ShadersActive = false
+end
+
+-- Limpeza da interface anterior sem afetar o estado global dos Shaders
 if CoreGui:FindFirstChild("SPWN_SHADERS_GUI") then
     CoreGui:FindFirstChild("SPWN_SHADERS_GUI"):Destroy()
 end
-
-_G.ShadersActive = false
 
 -- 2. SCREEN GUI
 local ScreenGui = Instance.new("ScreenGui")
@@ -35,7 +38,7 @@ local lastClick = 0
 ToggleButton.MouseButton1Click:Connect(function()
     local currentTick = tick()
     if currentTick - lastClick < 0.4 then
-        _G.ShadersActive = false
+        -- Fecha a interface mantendo os Shaders em execução se estiverem ativos
         ScreenGui:Destroy() 
     else
         ScreenGui.MainFrame.Visible = not ScreenGui.MainFrame.Visible
@@ -188,7 +191,7 @@ DetailsLabel.TextSize = 11
 DetailsLabel.TextXAlignment = Enum.TextXAlignment.Left
 DetailsLabel.Parent = RightPanel
 
--- Texto Descritivo Corrigido (Ajuste de espaço para a fonte Arcade)
+-- Texto Descritivo
 local Description = Instance.new("TextLabel")
 Description.Size = UDim2.new(1, -16, 0, 95)
 Description.Position = UDim2.new(0, 8, 0, 154)
@@ -196,7 +199,7 @@ Description.BackgroundTransparency = 1
 Description.Text = "Este shader oferece um ambiente dark e realista, com uma atmosfera Baseada no Forsekan. É o primeiro shader oficial do Project SPWN."
 Description.TextColor3 = Color3.fromRGB(220, 220, 220)
 Description.Font = Enum.Font.Arcade
-Description.TextSize = 10 -- Reduzido levemente para caber o texto completo
+Description.TextSize = 10
 Description.TextWrapped = true
 Description.TextYAlignment = Enum.TextYAlignment.Top
 Description.TextXAlignment = Enum.TextXAlignment.Left
@@ -227,15 +230,17 @@ ActionStroke.Parent = ActionButton
 
 -- 5. FUNÇÕES DE SUPORTE, SISTEMA DE SOL/LUA E RESET TOTAL
 
-local skyConnections = {}
+if _G.SkyConnections == nil then
+    _G.SkyConnections = {}
+end
 
 local function TotalReset()
     _G.ShadersActive = false
 
-    for _, conn in pairs(skyConnections) do
+    for _, conn in pairs(_G.SkyConnections) do
         if conn then conn:Disconnect() end
     end
-    skyConnections = {}
+    _G.SkyConnections = {}
 
     for _, obj in pairs(Lighting:GetChildren()) do
         if obj:IsA("PostEffect") or obj:IsA("Sky") or obj:IsA("Atmosphere") or obj.Name == "ULTRA_K_ORIGINAL" then
@@ -267,14 +272,14 @@ end
 
 local function AplicarTexturasSolLua(sky)
     if not sky or not _G.ShadersActive then return end
-    
+
     if sky.SunTextureId ~= TEXTURA_SOL_LUA then
         sky.SunTextureId = TEXTURA_SOL_LUA
     end
     if sky.MoonTextureId ~= TEXTURA_SOL_LUA then
         sky.MoonTextureId = TEXTURA_SOL_LUA
     end
-    
+
     if sky.SunAngularSize ~= TAMANHO_SOL_LUA then
         sky.SunAngularSize = TAMANHO_SOL_LUA
     end
@@ -285,16 +290,16 @@ end
 
 local function MonitorarSolLua(sky)
     AplicarTexturasSolLua(sky)
-    
+
     local connSun = sky:GetPropertyChangedSignal("SunTextureId"):Connect(function()
         AplicarTexturasSolLua(sky)
     end)
     local connMoon = sky:GetPropertyChangedSignal("MoonTextureId"):Connect(function()
         AplicarTexturasSolLua(sky)
     end)
-    
-    table.insert(skyConnections, connSun)
-    table.insert(skyConnections, connMoon)
+
+    table.insert(_G.SkyConnections, connSun)
+    table.insert(_G.SkyConnections, connMoon)
 end
 
 local function StartRain()
@@ -357,12 +362,27 @@ local function ApplyCloudyShader()
             MonitorarSolLua(child)
         end
     end)
-    table.insert(skyConnections, skyAddedConn)
+    table.insert(_G.SkyConnections, skyAddedConn)
 
     StartRain()
 end
 
--- 6. LÓGICA DE INTERAÇÃO DA INTERFACE
+-- 6. SINCRONIZAÇÃO INICIAL DO ESTADO VISUAL
+local function SyncVisualState()
+    if _G.ShadersActive then
+        ActionButton.Text = "REMOVER SHADERS"
+        ActionButton.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        ActionStroke.Color = Color3.fromRGB(255, 80, 80)
+    else
+        ActionButton.Text = "APLICAR SHADERS"
+        ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        ActionStroke.Color = Color3.fromRGB(200, 200, 200)
+    end
+end
+
+SyncVisualState()
+
+-- 7. LÓGICA DE INTERAÇÃO DA INTERFACE
 
 ShaderCard.MouseButton1Click:Connect(function()
     CardStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -372,13 +392,8 @@ end)
 ActionButton.MouseButton1Click:Connect(function()
     if _G.ShadersActive then
         TotalReset()
-        ActionButton.Text = "APLICAR SHADERS"
-        ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-        ActionStroke.Color = Color3.fromRGB(200, 200, 200)
     else
         ApplyCloudyShader()
-        ActionButton.Text = "REMOVER SHADERS"
-        ActionButton.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
-        ActionStroke.Color = Color3.fromRGB(255, 80, 80)
     end
+    SyncVisualState()
 end)
