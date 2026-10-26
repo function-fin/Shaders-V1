@@ -3,6 +3,7 @@ local Terrain = workspace.Terrain
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
+local UserInputService = game:GetService("UserInputService")
 
 -- Configurações da Textura Customizada do Sol e Lua
 local TEXTURA_SOL_LUA = "rbxassetid://85337967115080"
@@ -23,13 +24,26 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SPWN_SHADERS_GUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
 
--- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL
+-- ADAPTAÇÃO AUTOMÁTICA DE ESCALA (+80% NO PC, PADRÃO NO MOBILE)
+local uiScale = Instance.new("UIScale", ScreenGui)
+local function updateUIScale()
+    if not UserInputService.TouchEnabled then
+        uiScale.Scale = 1.8 -- Aumenta 80% no PC
+    else
+        uiScale.Scale = 1.0 -- Mantém tamanho padrão no mobile
+    end
+end
+UserInputService:GetPropertyChangedSignal("TouchEnabled"):Connect(updateUIScale)
+updateUIScale()
+
+-- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL (POSICIONADO NO LOCAL DO BOTÃO 4K)
 local ToggleButton = Instance.new("ImageButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Parent = ScreenGui
 ToggleButton.Size = UDim2.new(0, 60, 0, 60)
-ToggleButton.Position = UDim2.new(0, 20, 0.5, -30)
+ToggleButton.Position = UDim2.new(0, 20, 0, 290) -- Posição exata da coluna da esquerda onde fica o ícone 4K
 ToggleButton.BackgroundTransparency = 1
 ToggleButton.Image = "rbxassetid://125283549000216"
 ToggleButton.Draggable = true
