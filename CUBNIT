@@ -26,6 +26,11 @@ ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 
+-- [SPWN] Atributos de identificação persistente
+ScreenGui:SetAttribute("SPWN_ManagedScriptID", "ShadersScript")
+ScreenGui:SetAttribute("SPWN_ManagedScriptName", "SPWN Shaders Cloudy")
+ScreenGui:SetAttribute("SPWN_ManagedScriptCategory", "SPWN Shaders Cloudy")
+
 -- ADAPTAÇÃO AUTOMÁTICA DE ESCALA (+80% NO PC, PADRÃO NO MOBILE)
 local uiScale = Instance.new("UIScale", ScreenGui)
 local function updateUIScale()
@@ -39,11 +44,12 @@ UserInputService:GetPropertyChangedSignal("TouchEnabled"):Connect(updateUIScale)
 updateUIScale()
 
 -- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL (POSICIONADO NO LOCAL DO BOTÃO 4K)
+-- [SPWN] Renomeado para OpenToggleButton (o Manager atua nele)
 local ToggleButton = Instance.new("ImageButton")
-ToggleButton.Name = "ToggleButton"
+ToggleButton.Name = "OpenToggleButton"
 ToggleButton.Parent = ScreenGui
 ToggleButton.Size = UDim2.new(0, 60, 0, 60)
-ToggleButton.Position = UDim2.new(0, 20, 0, 290) -- Posição exata da coluna da esquerda onde fica o ícone 4K
+ToggleButton.Position = UDim2.new(0, 20, 0, 290)
 ToggleButton.BackgroundTransparency = 1
 ToggleButton.Image = "rbxassetid://125283549000216"
 ToggleButton.Draggable = true
@@ -410,4 +416,58 @@ ActionButton.MouseButton1Click:Connect(function()
         ApplyCloudyShader()
     end
     SyncVisualState()
+end)
+
+--------------------------------------------------
+-- [SPWN] ADAPTADOR PERSISTENTE
+--------------------------------------------------
+task.spawn(function()
+    local scriptId = "ShadersScript"
+    local scriptConfig = {
+        Name = "SPWN Shaders Cloudy",
+        Category = "SPWN Shaders Cloudy",
+        GuiObject = ScreenGui,
+        OnDestroy = function()
+            -- [SPWN] Espelha o duplo-clique original no ToggleButton:
+            -- SOMENTE destrói a GUI. Mantém _G.ShadersActive como está.
+            -- Os shaders continuam no mundo até o usuário reabrir e clicar
+            -- em "REMOVER SHADERS" (ou o script ser reexecutado).
+            --
+            -- Se você preferir que o Manager MATE os shaders ao remover o
+            -- script, troque o bloco abaixo por:
+            --   pcall(TotalReset)
+            pcall(function() ScreenGui:Destroy() end)
+        end
+    }
+
+    -- Garante a persistência global na memória
+    _G.ScriptManagerQueue = _G.ScriptManagerQueue or {}
+    _G.RegisteredScriptDatabase = _G.RegisteredScriptDatabase or {}
+
+    -- [SPWN] Lê visibilidade persistida em vez de hardcoded true
+    local persistedVis = ScreenGui:GetAttribute("SPWN_ManagedVisibility")
+
+    _G.RegisteredScriptDatabase[scriptId] = {
+        Name = scriptConfig.Name,
+        Category = scriptConfig.Category,
+        GuiObject = scriptConfig.GuiObject,
+        IsVisible = (persistedVis == nil) and true or persistedVis,
+        OnDestroy = scriptConfig.OnDestroy
+    }
+
+    local exists = false
+    for _, item in ipairs(_G.ScriptManagerQueue) do
+        if item.id == scriptId then
+            exists = true
+            item.config = scriptConfig
+            break
+        end
+    end
+    if not exists then
+        table.insert(_G.ScriptManagerQueue, {id = scriptId, config = scriptConfig})
+    end
+
+    if _G.ScriptManager and type(_G.ScriptManager.RegisterScript) == "function" then
+        _G.ScriptManager.RegisterScript(scriptId, scriptConfig)
+    end
 end)
