@@ -5,33 +5,27 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local UserInputService = game:GetService("UserInputService")
 
--- Configurações da Textura Customizada do Sol e Lua
 local TEXTURA_SOL_LUA = "rbxassetid://85337967115080"
 local TAMANHO_SOL_LUA = 15
 
--- 1. PERSISTÊNCIA DE MEMÓRIA DO SHADER
 if _G.ShadersActive == nil then
     _G.ShadersActive = false
 end
 
--- Limpeza da interface anterior sem afetar o estado global dos Shaders
 if CoreGui:FindFirstChild("SPWN_SHADERS_GUI") then
     CoreGui:FindFirstChild("SPWN_SHADERS_GUI"):Destroy()
 end
 
--- 2. SCREEN GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SPWN_SHADERS_GUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 
--- [SPWN] Atributos de identificação persistente
 ScreenGui:SetAttribute("SPWN_ManagedScriptID", "ShadersScript")
 ScreenGui:SetAttribute("SPWN_ManagedScriptName", "SPWN Shaders Cloudy")
 ScreenGui:SetAttribute("SPWN_ManagedScriptCategory", "SPWN Shaders Cloudy")
 
--- ADAPTAÇÃO AUTOMÁTICA DE ESCALA (+80% NO PC, PADRÃO NO MOBILE)
 local uiScale = Instance.new("UIScale", ScreenGui)
 local function updateUIScale()
     if not UserInputService.TouchEnabled then
@@ -43,8 +37,6 @@ end
 UserInputService:GetPropertyChangedSignal("TouchEnabled"):Connect(updateUIScale)
 updateUIScale()
 
--- 3. BOTÃO DE ATIVAÇÃO ARRASTÁVEL (POSICIONADO NO LOCAL DO BOTÃO 4K)
--- [SPWN] Renomeado para OpenToggleButton (o Manager atua nele)
 local ToggleButton = Instance.new("ImageButton")
 ToggleButton.Name = "OpenToggleButton"
 ToggleButton.Parent = ScreenGui
@@ -58,7 +50,7 @@ local lastClick = 0
 ToggleButton.MouseButton1Click:Connect(function()
     local currentTick = tick()
     if currentTick - lastClick < 0.4 then
-        -- Fecha a interface mantendo os Shaders em execução se estiverem ativos
+
         ScreenGui:Destroy() 
     else
         ScreenGui.MainFrame.Visible = not ScreenGui.MainFrame.Visible
@@ -66,7 +58,6 @@ ToggleButton.MouseButton1Click:Connect(function()
     lastClick = currentTick
 end)
 
--- 4. JANELA PRINCIPAL
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
@@ -87,14 +78,12 @@ MainStroke.Thickness = 1.5
 MainStroke.Color = Color3.fromRGB(220, 220, 220)
 MainStroke.Parent = MainFrame
 
--- --- PAINEL ESQUERDO (LISTA DE SHADERS) ---
 local LeftPanel = Instance.new("Frame")
 LeftPanel.Name = "LeftPanel"
 LeftPanel.Size = UDim2.new(0, 310, 1, 0)
 LeftPanel.BackgroundTransparency = 1
 LeftPanel.Parent = MainFrame
 
--- Cabeçalho
 local Header = Instance.new("TextLabel")
 Header.Size = UDim2.new(1, -20, 0, 40)
 Header.Position = UDim2.new(0, 15, 0, 5)
@@ -114,7 +103,6 @@ HeaderLine.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
 HeaderLine.BorderSizePixel = 0
 HeaderLine.Parent = LeftPanel
 
--- Card do Shader Cloudy
 local ShaderCard = Instance.new("ImageButton")
 ShaderCard.Name = "CloudyCard"
 ShaderCard.Size = UDim2.new(0, 110, 0, 110)
@@ -144,7 +132,6 @@ CardTitle.Font = Enum.Font.Arcade
 CardTitle.TextSize = 12
 CardTitle.Parent = ShaderCard
 
--- --- PAINEL DIREITO (PRÉ-VISUALIZAÇÃO E AÇÕES) ---
 local RightPanel = Instance.new("Frame")
 RightPanel.Name = "RightPanel"
 RightPanel.Size = UDim2.new(0, 195, 1, -16)
@@ -161,7 +148,6 @@ RightStroke.Thickness = 1
 RightStroke.Color = Color3.fromRGB(180, 180, 180)
 RightStroke.Parent = RightPanel
 
--- Pré-visualização Label
 local PreviewLabel = Instance.new("TextLabel")
 PreviewLabel.Size = UDim2.new(1, -10, 0, 20)
 PreviewLabel.Position = UDim2.new(0, 8, 0, 5)
@@ -173,7 +159,6 @@ PreviewLabel.TextSize = 12
 PreviewLabel.TextXAlignment = Enum.TextXAlignment.Left
 PreviewLabel.Parent = RightPanel
 
--- Imagem de Pré-visualização
 local PreviewImage = Instance.new("ImageLabel")
 PreviewImage.Size = UDim2.new(1, -16, 0, 100)
 PreviewImage.Position = UDim2.new(0, 8, 0, 25)
@@ -191,7 +176,6 @@ PreviewStroke.Thickness = 1
 PreviewStroke.Color = Color3.fromRGB(100, 100, 100)
 PreviewStroke.Parent = PreviewImage
 
--- Linha Divisória
 local DivLine = Instance.new("Frame")
 DivLine.Size = UDim2.new(1, -16, 0, 1)
 DivLine.Position = UDim2.new(0, 8, 0, 132)
@@ -199,7 +183,6 @@ DivLine.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 DivLine.BorderSizePixel = 0
 DivLine.Parent = RightPanel
 
--- Detalhes Label
 local DetailsLabel = Instance.new("TextLabel")
 DetailsLabel.Size = UDim2.new(1, -10, 0, 15)
 DetailsLabel.Position = UDim2.new(0, 8, 0, 137)
@@ -211,7 +194,6 @@ DetailsLabel.TextSize = 11
 DetailsLabel.TextXAlignment = Enum.TextXAlignment.Left
 DetailsLabel.Parent = RightPanel
 
--- Texto Descritivo
 local Description = Instance.new("TextLabel")
 Description.Size = UDim2.new(1, -16, 0, 95)
 Description.Position = UDim2.new(0, 8, 0, 154)
@@ -225,7 +207,6 @@ Description.TextYAlignment = Enum.TextYAlignment.Top
 Description.TextXAlignment = Enum.TextXAlignment.Left
 Description.Parent = RightPanel
 
--- Botão de Aplicar / Remover
 local ActionButton = Instance.new("TextButton")
 ActionButton.Name = "ActionButton"
 ActionButton.Size = UDim2.new(1, -16, 0, 30)
@@ -246,9 +227,6 @@ ActionStroke.Thickness = 1
 ActionStroke.Color = Color3.fromRGB(200, 200, 200)
 ActionStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 ActionStroke.Parent = ActionButton
-
-
--- 5. FUNÇÕES DE SUPORTE, SISTEMA DE SOL/LUA E RESET TOTAL
 
 if _G.SkyConnections == nil then
     _G.SkyConnections = {}
@@ -390,8 +368,8 @@ end
 -- 6. SINCRONIZAÇÃO INICIAL DO ESTADO VISUAL
 local function SyncVisualState()
     if _G.ShadersActive then
-        -- ALTERAÇÃO AQUI: Removido o vermelho, mantendo o padrão e mudando o texto
-        ActionButton.Text = "SHADERS ATIVOS" 
+
+        ActionButton.Text = "DESATIVAR SHADERS" 
         ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
         ActionStroke.Color = Color3.fromRGB(200, 200, 200)
     else
@@ -402,8 +380,6 @@ local function SyncVisualState()
 end
 
 SyncVisualState()
-
--- 7. LÓGICA DE INTERAÇÃO DA INTERFACE
 
 ShaderCard.MouseButton1Click:Connect(function()
     CardStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -419,9 +395,6 @@ ActionButton.MouseButton1Click:Connect(function()
     SyncVisualState()
 end)
 
---------------------------------------------------
--- [SPWN] ADAPTADOR PERSISTENTE
---------------------------------------------------
 task.spawn(function()
     local scriptId = "ShadersScript"
     local scriptConfig = {
@@ -429,23 +402,14 @@ task.spawn(function()
         Category = "SPWN Shaders Cloudy",
         GuiObject = ScreenGui,
         OnDestroy = function()
-            -- [SPWN] Espelha o duplo-clique original no ToggleButton:
-            -- SOMENTE destrói a GUI. Mantém _G.ShadersActive como está.
-            -- Os shaders continuam no mundo até o usuário reabrir e clicar
-            -- em "SHADERS ATIVOS" (ou o script ser reexecutado).
-            --
-            -- Se você preferir que o Manager MATE os shaders ao remover o
-            -- script, troque o bloco abaixo por:
-            --   pcall(TotalReset)
+
             pcall(function() ScreenGui:Destroy() end)
         end
     }
 
-    -- Garante a persistência global na memória
     _G.ScriptManagerQueue = _G.ScriptManagerQueue or {}
     _G.RegisteredScriptDatabase = _G.RegisteredScriptDatabase or {}
 
-    -- [SPWN] Lê visibilidade persistida em vez de hardcoded true
     local persistedVis = ScreenGui:GetAttribute("SPWN_ManagedVisibility")
 
     _G.RegisteredScriptDatabase[scriptId] = {
