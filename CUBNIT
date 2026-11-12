@@ -390,9 +390,10 @@ end
 -- 6. SINCRONIZAÇÃO INICIAL DO ESTADO VISUAL
 local function SyncVisualState()
     if _G.ShadersActive then
-        ActionButton.Text = "REMOVER SHADERS"
-        ActionButton.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
-        ActionStroke.Color = Color3.fromRGB(255, 80, 80)
+        -- ALTERAÇÃO AQUI: Removido o vermelho, mantendo o padrão e mudando o texto
+        ActionButton.Text = "SHADERS ATIVOS" 
+        ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        ActionStroke.Color = Color3.fromRGB(200, 200, 200)
     else
         ActionButton.Text = "APLICAR SHADERS"
         ActionButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
@@ -431,7 +432,7 @@ task.spawn(function()
             -- [SPWN] Espelha o duplo-clique original no ToggleButton:
             -- SOMENTE destrói a GUI. Mantém _G.ShadersActive como está.
             -- Os shaders continuam no mundo até o usuário reabrir e clicar
-            -- em "REMOVER SHADERS" (ou o script ser reexecutado).
+            -- em "SHADERS ATIVOS" (ou o script ser reexecutado).
             --
             -- Se você preferir que o Manager MATE os shaders ao remover o
             -- script, troque o bloco abaixo por:
